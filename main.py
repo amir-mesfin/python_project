@@ -99,12 +99,17 @@ class WeatherApp(QWidget):
     
     response = requests.get(url)
     data = response.json()
-    print(data)
+    # print(data)
+    
+    if data["cod"] == 200:
+      self.display_weather(data)
+    else:
+      self.display_error(data["message"])
     
   def display_error(self, message):
-    pass  
-  def display_weather(self):
-    pass
+    print(message)
+  def display_weather(self,data):
+    print(data)
   
 if __name__ == "__main__":
    app = QApplication(sys.argv)
