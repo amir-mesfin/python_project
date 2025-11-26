@@ -96,18 +96,49 @@ class WeatherApp(QWidget):
     api_key = "d5698f8902350c831f2b1c234be1e5b5"
     city = self.city_input.text()
     url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}"
-    
-    response = requests.get(url)
-    data = response.json()
+    try:
+      response = requests.get(url)
+      response.raise_for_status()
+      data = response.json()
     # print(data)
     
-    if data["cod"] == 200:
-      self.display_weather(data)
-    else:
-      self.display_error(data["message"])
+      if data["cod"] == 200:
+        self.display_weather(data)
+
+    except requests.exceptions.HTTPError :
+      # print(response.status_code)
+      match response.status_code:
+        case 400:
+            self.display_error("400 - Bad Request: Please check the city name.")
+        case 401:
+            self.display_error("401 - Unauthorized: Invalid API key.")
+        case 403:
+            self.display_error("403 - Forbidden: Access denied.")
+        case 404:
+            self.display_error("404 - Not Found: City not found.")
+        case 500:
+            self.display_error("500 - Server Error: Try again later.")
+        case _:
+            self.display_error(f"Unexpected Error: {response.status_code}")
+    except requests.exceptions.HTTPError:
+        self.display_error("HTTP error:", response.status_code)
+
+    except requests.exceptions.ConnectionError:
+        self.display_error("Connection Error — check your internet connection.")
+
+    except requests.exceptions.Timeout:
+        self.display_error("Request timed out — server is too slow.")
+
+    except requests.exceptions.TooManyRedirects:
+        self.display_error("Too many redirects — invalid URL.")
+
+    except requests.exceptions.RequestException as e:
+        self.display_error("Unknown error:", e)
+    
     
   def display_error(self, message):
-    print(message)
+    # print(message)
+    self.temperature_label.setText(message)
   def display_weather(self,data):
     print(data)
   
